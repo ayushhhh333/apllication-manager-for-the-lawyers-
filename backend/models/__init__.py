@@ -3,7 +3,7 @@ from .clinte_model import Client
 from .user_login_model import UserDeatails
 from .payment_model import Payment
 from .hearings import Hearing
-from Tasks_model import Task
-from Time_entries import TimeEntry
-from Documents import Document
-from Invoices import Invoice
+from .Tasks import Task
+from .Time_entries import TimeEntry
+from .Documents import Document
+from .Invoices import Invoice
