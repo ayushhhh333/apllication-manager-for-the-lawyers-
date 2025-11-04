@@ -1,38 +1,21 @@
-from extention import db
-from datetime import datetime, date
+from sqlalchemy import Column, Integer, String, Text, Date, ForeignKey, Numeric
+from datetime import date
+from ..database import db, Base # Adjust import based on where 'db' is initialized
 
-class Invoice(db.Model):
+class Invoice(Base):
     __tablename__ = "invoices"
 
-    id = db.Column(db.Integer, primary_key=True)
-    client_id = db.Column(db.Integer, db.ForeignKey("clients.id")) # Table name for Client model
-    case_id = db.Column(db.Integer, db.ForeignKey("cases.id"), nullable=True) # An invoice might be for a client generally or a specific case
-    invoice_number = db.Column(db.String(100), unique=True, nullable=False)
-    issue_date = db.Column(db.Date, default=date.today, nullable=False)
-    due_date = db.Column(db.Date, nullable=False)
-    total_amount = db.Column(db.Numeric(10, 2), nullable=False)
-    status = db.Column(db.String(50), default="Pending") # e.g., Pending, Paid, Overdue, Cancelled
-    description = db.Column(db.Text, nullable=True)
-
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    id = Column(Integer, primary_key=True, index=True)
+    client_id = Column(Integer, ForeignKey("clients.id")) # Table name for Client model
+    case_id = Column(Integer, ForeignKey("cases.id"), nullable=True)
+    invoice_number = Column(String, unique=True, index=True)
+    issue_date = Column(Date, default=date.today)
+    due_date = Column(Date)
+    total_amount = Column(Numeric(10, 2))
+    status = Column(String, default="Pending")
+    description = Column(Text, nullable=True)
 
     # Relationships
     client = db.relationship("Client", backref="invoices", lazy=True)
-    case = db.relationship("Case", backref="invoices_for_case", lazy=True) # Use a distinct backref name for case relationship
-    # payments backref is handled by payment_model.py
-
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "client_id": self.client_id,
-            "case_id": self.case_id,
-            "invoice_number": self.invoice_number,
-            "issue_date": self.issue_date.isoformat() if self.issue_date else None,
-            "due_date": self.due_date.isoformat() if self.due_date else None,
-            "total_amount": float(self.total_amount),
-            "status": self.status,
-            "description": self.description,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
-            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
-        }
+    case = db.relationship("Case", backref="invoices_for_case", lazy=True) # Use a different backref name if 'invoices' is already used by client
+    payments = db.relationship("Payment", backref="invoice", lazy=True) # Assuming Payment model will have an invoice_id foreign key
